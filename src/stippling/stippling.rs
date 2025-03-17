@@ -10,13 +10,13 @@ use voronator::delaunator::Point;
 /// Uses the ray-casting algorithm.
 #[inline]
 fn point_in_polygon(x: f32, y: f32, polygon: &[(f32, f32)]) -> bool {
-    let mut inside = false;
-    let n = polygon.len();
+    let mut inside: bool = false;
+    let n: usize = polygon.len();
     if n < 3 {
         return false;
     }
 
-    let mut j = n - 1;
+    let mut j: usize = n - 1;
     for i in 0..n {
         let (xi, yi) = polygon[i];
         let (xj, yj) = polygon[j];
@@ -37,8 +37,8 @@ pub fn generate_stippling(
     iterations: usize,
 ) -> (Vec<(f32, f32)>, Vec<f32>, Vec<PointColor>) {
     let (width, height) = gray_image.dimensions();
-    let width_f = width as f32;
-    let height_f = height as f32;
+    let width_f: f32 = width as f32;
+    let height_f: f32 = height as f32;
 
     let brightness_map: Vec<Vec<f32>> = (0..height)
         .map(|y| {
@@ -48,12 +48,12 @@ pub fn generate_stippling(
         })
         .collect();
 
-    let mut rng = StdRng::seed_from_u64(seed);
+    let mut rng: StdRng = StdRng::seed_from_u64(seed);
 
-    let mut points = Vec::with_capacity(num_points);
-    let threshold = 24.0;
+    let mut points: Vec<(f32, f32)> = Vec::with_capacity(num_points);
+    let threshold: f32 = 24.0;
 
-    let mut bright_pixels = Vec::new();
+    let mut bright_pixels: Vec<(u32, u32)> = Vec::new();
     for y in 0..height {
         for x in 0..width {
             let brightness = brightness_map[y as usize][x as usize];
@@ -65,27 +65,26 @@ pub fn generate_stippling(
 
     if bright_pixels.is_empty() {
         while points.len() < num_points {
-            let x = rng.random_range(0..width) as f32;
-            let y = rng.random_range(0..height) as f32;
+            let x: f32 = rng.random_range(0..width) as f32;
+            let y: f32 = rng.random_range(0..height) as f32;
             points.push((x, y));
         }
     } else {
-        // Sample from valid pixels
         while points.len() < num_points {
-            let idx = rng.random_range(0..bright_pixels.len());
+            let idx: usize = rng.random_range(0..bright_pixels.len());
             let (x, y) = bright_pixels[idx];
             points.push((x as f32, y as f32));
         }
     }
 
-    let mut average_weights = vec![0.0f32; points.len()];
-    let mut max_weight = 0.0f32;
+    let mut average_weights: Vec<f32> = vec![0.0f32; points.len()];
+    let mut max_weight: f32 = 0.0f32;
 
     for _ in 0..iterations {
         let points_f64: Vec<(f64, f64)> =
             points.iter().map(|&(x, y)| (x as f64, y as f64)).collect();
 
-        let voronoi = VoronoiDiagram::<Point>::from_tuple(
+        let voronoi: VoronoiDiagram<Point> = VoronoiDiagram::<Point>::from_tuple(
             &(0.0, 0.0),
             &(width as f64, height as f64),
             &points_f64,
@@ -101,7 +100,6 @@ pub fn generate_stippling(
                     return (points[i], 0.0f32, 0);
                 }
 
-                // Find cell bounding box for optimization
                 let mut min_x = f32::INFINITY;
                 let mut max_x = f32::NEG_INFINITY;
                 let mut min_y = f32::INFINITY;
@@ -115,16 +113,15 @@ pub fn generate_stippling(
                     max_y = max_y.max(vy);
                 }
 
-                // Clamp to image boundaries
                 min_x = min_x.max(0.0);
                 max_x = max_x.min(width_f - 1.0);
                 min_y = min_y.max(0.0);
                 max_y = max_y.min(height_f - 1.0);
 
-                let start_x = min_x.floor() as u32;
-                let end_x = max_x.ceil() as u32;
-                let start_y = min_y.floor() as u32;
-                let end_y = max_y.ceil() as u32;
+                let start_x: u32 = min_x.floor() as u32;
+                let end_x: u32 = max_x.ceil() as u32;
+                let start_y: u32 = min_y.floor() as u32;
+                let end_y: u32 = max_y.ceil() as u32;
 
                 let cell_points: Vec<(f32, f32)> = cell
                     .points()
@@ -132,10 +129,10 @@ pub fn generate_stippling(
                     .map(|p| (p.x as f32, p.y as f32))
                     .collect();
 
-                let mut sum_x = 0.0f32;
-                let mut sum_y = 0.0f32;
-                let mut sum_weight = 0.0f32;
-                let mut count = 0;
+                let mut sum_x: f32 = 0.0f32;
+                let mut sum_y: f32 = 0.0f32;
+                let mut sum_weight: f32 = 0.0f32;
+                let mut count: i32 = 0;
 
                 for x in start_x..=end_x {
                     for y in start_y..=end_y {
@@ -143,8 +140,8 @@ pub fn generate_stippling(
                         let yf = y as f32;
 
                         if point_in_polygon(xf, yf, &cell_points) {
-                            let brightness = brightness_map[y as usize][x as usize];
-                            let weight = 1.0 - brightness / 255.0;
+                            let brightness: f32 = brightness_map[y as usize][x as usize];
+                            let weight: f32 = 1.0 - brightness / 255.0;
                             sum_x += xf * weight;
                             sum_y += yf * weight;
                             sum_weight += weight;
@@ -154,8 +151,8 @@ pub fn generate_stippling(
                 }
 
                 if sum_weight > 0.0 {
-                    let new_point = (sum_x / sum_weight, sum_y / sum_weight);
-                    let avg = sum_weight / (count as f32);
+                    let new_point: (f32, f32) = (sum_x / sum_weight, sum_y / sum_weight);
+                    let avg: f32 = sum_weight / (count as f32);
                     (new_point, avg, count)
                 } else {
                     (points[i], 0.0f32, 0)
@@ -163,9 +160,9 @@ pub fn generate_stippling(
             })
             .collect();
 
-        let mut new_points = Vec::with_capacity(points.len());
-        let mut new_average_weights = vec![0.0f32; points.len()];
-        let mut new_max_weight = 0.0f32;
+        let mut new_points: Vec<(f32, f32)> = Vec::with_capacity(points.len());
+        let mut new_average_weights: Vec<f32> = vec![0.0f32; points.len()];
+        let mut new_max_weight: f32 = 0.0f32;
 
         for (i, (point, weight, _)) in cell_results.into_iter().enumerate() {
             new_points.push(point);
@@ -181,7 +178,7 @@ pub fn generate_stippling(
     }
 
     let radii: Vec<f32> = average_weights
-        .iter()
+        .par_iter()
         .map(|&w| {
             if max_weight > 0.0 {
                 w / max_weight

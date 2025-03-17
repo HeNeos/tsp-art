@@ -14,22 +14,22 @@ impl TourStrategy for CheapestInsertionStrategy {
             }
         }
 
-        let mut tour = hull_indices.clone();
+        let mut tour: Vec<usize> = hull_indices.clone();
         let mut in_tour: HashSet<usize> = tour.iter().copied().collect();
 
         let mut remaining: Vec<usize> =
             (0..points.len()).filter(|i| !in_tour.contains(i)).collect();
 
         while !remaining.is_empty() {
-            let mut best_candidate = None;
-            let mut best_increase = std::f32::INFINITY;
-            let mut best_insert_position = 0;
-            let mut best_candidate_idx_in_remaining = 0;
+            let mut best_candidate: Option<usize> = None;
+            let mut best_increase: f32 = std::f32::INFINITY;
+            let mut best_insert_position: usize = 0;
+            let mut best_candidate_idx_in_remaining: usize = 0;
 
             for (r_idx, &candidate) in remaining.iter().enumerate() {
                 for i in 0..tour.len() {
-                    let j = (i + 1) % tour.len();
-                    let cost = distance(points[tour[i]], points[candidate])
+                    let j: usize = (i + 1) % tour.len();
+                    let cost: f32 = distance(points[tour[i]], points[candidate])
                         + distance(points[candidate], points[tour[j]])
                         - distance(points[tour[i]], points[tour[j]]);
                     if cost < best_increase {

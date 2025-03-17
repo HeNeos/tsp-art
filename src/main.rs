@@ -11,6 +11,7 @@ use crate::svg::svg_generator::generate_tsp_svg;
 use crate::tour_generation::tour_strategy::{CheapestInsertionStrategy, GreedyStrategy, Tour};
 use clap::Parser;
 use geo::{ConvexHull, MultiPoint, Point};
+use tour_generation::tour_strategy::TourStrategy;
 
 fn main() {
     let args = Args::parse();
@@ -46,8 +47,13 @@ fn main() {
     let hull_points: Vec<Point<f32>> = hull.exterior().points().collect();
 
     println!("Generating Tour");
-    let tsp = Tour::new(GreedyStrategy);
-    let tour = tsp.tour(&points, &hull_points);
+    let tour = if args.points > 1024 {
+        let tsp = Tour::new(GreedyStrategy);
+        tsp.tour(&points, &hull_points)
+    } else {
+        let tsp = Tour::new(CheapestInsertionStrategy);
+        tsp.tour(&points, &hull_points)
+    };
 
     println!("Generating SVG");
     generate_tsp_svg(

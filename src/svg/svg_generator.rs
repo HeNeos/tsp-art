@@ -29,9 +29,9 @@ pub fn generate_svg_stippling(
         } else {
             0.0
         };
-        let color = format!("rgb({},{},{})", colors[i].r, colors[i].g, colors[i].b);
-        let radius = min_radius + normalized_darkness * (max_radius - min_radius);
-        let circle = Circle::new()
+        let color: String = format!("rgb({},{},{})", colors[i].r, colors[i].g, colors[i].b);
+        let radius: f32 = min_radius + normalized_darkness * (max_radius - min_radius);
+        let circle: Circle = Circle::new()
             .set("cx", x)
             .set("cy", y)
             .set("r", radius)
@@ -62,8 +62,8 @@ pub fn generate_svg_stippling(
         }
 
         // Create path data for cell boundary
-        let mut path_data = String::new();
-        let cell_points = cell.points();
+        let mut path_data: String = String::new();
+        let cell_points: &[Point] = cell.points();
 
         // Start path at first point
         if let Some(first_point) = cell_points.first() {
@@ -78,7 +78,7 @@ pub fn generate_svg_stippling(
             path_data.push_str(" Z");
 
             // Create and add the path element
-            let path = Path::new().set("d", path_data);
+            let path: Path = Path::new().set("d", path_data);
 
             voronoi_group = voronoi_group.add(path);
         }
@@ -104,54 +104,54 @@ pub fn generate_tsp_svg(
     line_color: Option<(u8, u8, u8)>,
     output_path: &str,
 ) {
-    let max_darkness = darkness_values.iter().cloned().fold(0.0, f32::max);
+    let max_darkness: f32 = darkness_values.iter().cloned().fold(0.0, f32::max);
     let mut document = Document::new()
         .set("viewBox", (0, 0, width, height))
         .set("width", width)
         .set("height", height);
 
     for (i, &(x, y)) in points.iter().enumerate() {
-        let normalized_darkness = if max_darkness > 0.0 {
+        let normalized_darkness: f32 = if max_darkness > 0.0 {
             darkness_values[i] / max_darkness
         } else {
             0.0
         };
-        let radius = min_radius + normalized_darkness * (max_radius - min_radius);
-        let color = format!("rgb({},{},{})", colors[i].r, colors[i].g, colors[i].b);
-        let circle = Circle::new()
+        let radius: f32 = min_radius + normalized_darkness * (max_radius - min_radius);
+        let color: String = format!("rgb({},{},{})", colors[i].r, colors[i].g, colors[i].b);
+        let circle: Circle = Circle::new()
             .set("cx", x)
             .set("cy", y)
-            .set("r", radius) // Small radius for millions of points
+            .set("r", radius)
             .set("fill", color);
         document = document.add(circle);
     }
 
-    let mut path_segments = Vec::new();
-    let mut stroke_widths = Vec::new();
-    let mut segment_colors = Vec::new();
+    let mut path_segments: Vec<(f32, f32, f32, f32)> = Vec::new();
+    let mut stroke_widths: Vec<f32> = Vec::new();
+    let mut segment_colors: Vec<String> = Vec::new();
 
     for i in 0..tour.len() {
-        let current_idx = tour[i];
-        let next_idx = tour[(i + 1) % tour.len()]; // Loop back to start
+        let current_idx: usize = tour[i];
+        let next_idx: usize = tour[(i + 1) % tour.len()]; // Loop back to start
 
         let (x1, y1) = points[current_idx];
         let (x2, y2) = points[next_idx];
 
         // Calculate average darkness for the segment
-        let avg_darkness = (darkness_values[current_idx] + darkness_values[next_idx]) / 2.0;
-        let normalized_avg_darkness = if max_darkness > 0.0 {
+        let avg_darkness: f32 = (darkness_values[current_idx] + darkness_values[next_idx]) / 2.0;
+        let normalized_avg_darkness: f32 = if max_darkness > 0.0 {
             avg_darkness / max_darkness
         } else {
             0.0
         };
 
         // Calculate stroke width based on darkness
-        let stroke_width =
+        let stroke_width: f32 =
             min_stroke_width + normalized_avg_darkness * (max_stroke_width - min_stroke_width);
         stroke_widths.push(stroke_width);
 
         // Determine segment color
-        let segment_color = match line_color {
+        let segment_color: String = match line_color {
             Some(color) => format!("rgb({},{},{})", color.0, color.1, color.2),
             None => {
                 // Average the colors of the connected points if no specific line color is provided
