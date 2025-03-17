@@ -1,4 +1,3 @@
-pub mod hilbert_curve;
 pub mod image;
 pub mod input;
 pub mod stippling;
