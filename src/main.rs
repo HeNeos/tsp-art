@@ -11,7 +11,6 @@ use crate::svg::svg_generator::generate_tsp_svg;
 use crate::tour_generation::tour_strategy::{CheapestInsertionStrategy, GreedyStrategy, Tour};
 use clap::Parser;
 use geo::{ConvexHull, MultiPoint, Point};
-use tour_generation::tour_strategy::TourStrategy;
 
 fn main() {
     let args = Args::parse();

@@ -1,8 +1,7 @@
 use super::tour_strategy::{GreedyStrategy, TourStrategy};
 use super::utils::{distance, two_opt};
 use geo::Point;
-use kdtree::KdTree;
-use kdtree::distance::squared_euclidean;
+use kiddo::{KdTree, SquaredEuclidean};
 
 impl TourStrategy for GreedyStrategy {
     fn build_tour(&self, points: &Vec<(f32, f32)>, hull_points: &Vec<Point<f32>>) -> Vec<usize> {
@@ -25,10 +24,10 @@ impl TourStrategy for GreedyStrategy {
             in_tour[idx] = true;
         }
 
-        let mut kdtree = KdTree::new(2);
+        let mut kdtree = KdTree::<f32, 2>::with_capacity(points.len());
         for (idx, &(x, y)) in points.iter().enumerate() {
             if !in_tour[idx] {
-                kdtree.add([x, y], idx).unwrap();
+                kdtree.add(&[x, y], idx as u64);
             }
         }
 
@@ -37,7 +36,8 @@ impl TourStrategy for GreedyStrategy {
             let mut best_p = None;
             let mut best_k = None;
 
-            let step: usize = (tour.len() >> 9).max(1).min(6);
+            let step: usize = (tour.len() >> 8).max(1).min(8);
+            let max_neighbors: usize = if step > 4 { 8 } else { 4 };
             for k in (0..tour.len()).step_by(step) {
                 let next_k: usize = (k + 1) % tour.len();
                 let i: usize = tour[k];
@@ -48,24 +48,22 @@ impl TourStrategy for GreedyStrategy {
                 let mid_x: f32 = (p1.0 + p2.0) / 2.0;
                 let mid_y: f32 = (p1.1 + p2.1) / 2.0;
 
-                let max_neighbors: usize = if step > 4 { 5 } else { 3 };
-                if let Ok(neighbors) =
-                    kdtree.nearest(&[mid_x, mid_y], max_neighbors, &squared_euclidean)
-                {
-                    for (_, &p) in neighbors {
-                        if in_tour[p] {
-                            continue;
-                        }
+                let neighbors =
+                    kdtree.nearest_n::<SquaredEuclidean>(&[mid_x, mid_y], max_neighbors);
+                for neighbor in neighbors {
+                    let p: usize = neighbor.item as usize;
+                    if in_tour[p] {
+                        continue;
+                    }
 
-                        let increase: f32 = distance(points[i], points[p])
-                            + distance(points[p], points[j])
-                            - distance(points[i], points[j]);
+                    let increase: f32 = distance(points[i], points[p])
+                        + distance(points[p], points[j])
+                        - distance(points[i], points[j]);
 
-                        if increase < best_increase {
-                            best_increase = increase;
-                            best_p = Some(p);
-                            best_k = Some(k);
-                        }
+                    if increase < best_increase {
+                        best_increase = increase;
+                        best_p = Some(p);
+                        best_k = Some(k);
                     }
                 }
             }
@@ -81,14 +79,13 @@ impl TourStrategy for GreedyStrategy {
 
                 in_tour[p] = true;
 
-                if let Ok(neighbors) =
-                    kdtree.nearest(&[points[p].0, points[p].1], 1, &squared_euclidean)
-                {
-                    for &(_, &idx) in neighbors.iter() {
-                        if idx == p {
-                            kdtree.remove(&[points[p].0, points[p].1], &p).ok();
-                            break;
-                        }
+                let neighbors =
+                    kdtree.nearest_n::<SquaredEuclidean>(&[points[p].0, points[p].1], 1);
+                for neighbor in neighbors.iter() {
+                    let idx = neighbor.item as usize;
+                    if idx == p {
+                        kdtree.remove(&[points[p].0, points[p].1], p as u64);
+                        break;
                     }
                 }
             } else {
@@ -100,13 +97,12 @@ impl TourStrategy for GreedyStrategy {
                     tour.push(p);
                     in_tour[p] = true;
 
-                    kdtree.remove(&[points[p].0, points[p].1], &p).ok();
+                    kdtree.remove(&[points[p].0, points[p].1], p as u64);
                 } else {
                     break;
                 }
             }
-
-            if tour.len() % 256 == 0 {
+            if tour.len() % 32 == 0 {
                 two_opt(&points, &mut tour);
             }
         }
