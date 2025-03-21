@@ -1,13 +1,17 @@
+mod fourier_epicycle;
 mod image;
 mod input;
 mod stippling;
 mod svg_generator;
 mod tour_generation;
 
+use crate::fourier_epicycle::fourier::{compute_fourier_series, compute_position};
 use crate::image::image_processing::load_and_grayscale;
 use crate::input::input::Args;
 use crate::stippling::stippling::generate_stippling;
-use crate::svg_generator::svg_generator::{generate_svg_stippling, generate_tsp_svg};
+use crate::svg_generator::svg_generator::{
+    generate_fourier_svg, generate_svg_stippling, generate_tsp_svg,
+};
 use crate::tour_generation::tour_strategy::{CheapestInsertionStrategy, GreedyStrategy, Tour};
 use clap::Parser;
 use geo::{ConvexHull, MultiPoint, Point};
@@ -67,5 +71,35 @@ fn main() {
         args.max_stroke_width,
         None,
     );
+
+    let output_dir = "frames_out";
+    let tour_points: Vec<(f32, f32)> = tour.iter().map(|&i| points[i]).collect();
+
+    let (c_0, epicycles) = compute_fourier_series(&tour_points, 8192);
+
+    let mut trace_points = Vec::new();
+    let num_frames = 3600;
+    for frame in 0..num_frames {
+        let t = frame as f32 / (num_frames - 1) as f32;
+        let position = compute_position(c_0, &epicycles, t);
+        trace_points.push(position);
+
+        let frame_svg = generate_fourier_svg(
+            svg.clone(),
+            c_0,
+            &epicycles,
+            t,
+            &points,
+            &trace_points,
+            &colors,
+            &tour,
+            &darkness_values,
+            args.min_stroke_width,
+            args.max_stroke_width,
+        );
+        let output_path = format!("{}/frame_{:04}.svg", output_dir, frame);
+        svg::save(&output_path, &frame_svg).expect("Failed to save SVG frame");
+    }
+
     svg::save(&output_path, &svg).expect("Failed to save SVG");
 }
