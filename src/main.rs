@@ -44,28 +44,28 @@ fn main() {
         args.max_radius,
     );
 
-    // let geo_points: Vec<Point<f32>> = points.iter().map(|&(x, y)| Point::new(x, y)).collect();
-    // let multi_point = MultiPoint::from(geo_points);
-    // let hull = multi_point.convex_hull(); // Returns a Polygon<f32>
-    // let hull_points: Vec<Point<f32>> = hull.exterior().points().collect();
+    let geo_points: Vec<Point<f32>> = points.iter().map(|&(x, y)| Point::new(x, y)).collect();
+    let multi_point = MultiPoint::from(geo_points);
+    let hull = multi_point.convex_hull(); // Returns a Polygon<f32>
+    let hull_points: Vec<Point<f32>> = hull.exterior().points().collect();
 
-    // let tour = if args.points > 2048 {
-    //     let tsp = Tour::new(GreedyStrategy);
-    //     tsp.tour(&points, &hull_points)
-    // } else {
-    //     let tsp = Tour::new(CheapestInsertionStrategy);
-    //     tsp.tour(&points, &hull_points)
-    // };
+    let tour = if args.points > 2048 {
+        let tsp = Tour::new(GreedyStrategy);
+        tsp.tour(&points, &hull_points)
+    } else {
+        let tsp = Tour::new(CheapestInsertionStrategy);
+        tsp.tour(&points, &hull_points)
+    };
 
-    // svg = generate_tsp_svg(
-    //     svg,
-    //     &points,
-    //     &tour,
-    //     &darkness_values,
-    //     &colors,
-    //     args.min_stroke_width,
-    //     args.max_stroke_width,
-    //     None,
-    // );
-    svg::save("output.svg", &svg).expect("Failed to save SVG");
+    svg = generate_tsp_svg(
+        svg,
+        &points,
+        &tour,
+        &darkness_values,
+        &colors,
+        args.min_stroke_width,
+        args.max_stroke_width,
+        None,
+    );
+    svg::save(&output_path, &svg).expect("Failed to save SVG");
 }
