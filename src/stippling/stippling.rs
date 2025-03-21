@@ -3,8 +3,8 @@ use image::{DynamicImage, GenericImageView, GrayImage, Pixel};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rayon::prelude::*;
-use voronator::VoronoiDiagram;
 use voronator::delaunator::Point;
+use voronator::VoronoiDiagram;
 
 /// Checks whether a point (x, y) is inside the polygon defined by vertices.
 /// Uses the ray-casting algorithm.

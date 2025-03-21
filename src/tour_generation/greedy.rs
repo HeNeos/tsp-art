@@ -36,8 +36,8 @@ impl TourStrategy for GreedyStrategy {
             let mut best_p = None;
             let mut best_k = None;
 
-            let step: usize = (tour.len() >> 8).max(1).min(8);
-            let max_neighbors: usize = if step > 4 { 8 } else { 4 };
+            let step: usize = (tour.len() >> 8).max(1).min(4);
+            let max_neighbors: usize = if step > 4 { 8 } else { 3 };
             for k in (0..tour.len()).step_by(step) {
                 let next_k: usize = (k + 1) % tour.len();
                 let i: usize = tour[k];

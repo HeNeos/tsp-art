@@ -7,6 +7,9 @@ pub struct Args {
     #[clap(short, long)]
     pub image: String,
 
+    #[clap(short, long, default_value = "output.svg")]
+    pub output: String,
+
     /// Number of stippling points
     #[clap(short, long)]
     pub points: usize,
