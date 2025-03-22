@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-command -v svgexport >/dev/null 2>&1 || { echo >&2 " Required to convert to png (svgexport)"; exit 1; }
+command -v rsvg-convert >/dev/null 2>&1 || { echo >&2 " Required to convert to png (rsvg-convert)"; exit 1; }
 command -v ffmpeg >/dev/null 2>&1 || { echo >&2 "FFmpeg required"; exit 1; }
 command -v parallel >/dev/null 2>&1 || { 
     echo >&2 "GNU Parallel required. Install with:"
@@ -33,7 +33,7 @@ convert_svg_to_png() {
     local svg_file="$1"
     local png_file="$PNG_DIR/$(basename "${svg_file%.*}").png"
     for ((attempt=1; attempt<=3; attempt++)); do
-        if svgexport "$svg_file" "$png_file" 2x 2>/dev/null; then
+        if rsvg-convert --background-color=white "$svg_file" -o "$png_file" 2>/dev/null; then
             echo -n "."
             return 0
         else
