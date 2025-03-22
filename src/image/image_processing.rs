@@ -1,6 +1,6 @@
-use image::{imageops::FilterType, DynamicImage, GenericImageView, GrayImage};
+use image::{DynamicImage, GenericImageView, GrayImage, imageops::FilterType};
 
-const MAX_HEIGHT: u32 = 720;
+const MAX_HEIGHT: u32 = 1080;
 
 /// Loads an image from a file and converts it to grayscale.
 pub fn load_and_grayscale(path: &str) -> (DynamicImage, GrayImage) {

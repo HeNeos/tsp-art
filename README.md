@@ -90,7 +90,7 @@ This generates out.mp4 in the current directory at 30 FPS.
 
 ## How It Works
 
-1. Image Processing: The input image is resized (max height 720px) and converted to grayscale.
+1. Image Processing: The input image is resized (max height 1080 px) and converted to grayscale.
 
 2. Stippling: Points are distributed based on brightness using a weighted centroid algorithm with Voronoi diagrams.
 
